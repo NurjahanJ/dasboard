@@ -64,22 +64,34 @@ const Dashboard = () => {
 
 
   const renderInflationChart = () => {
-    const traces = selectedStates.map(state => {
-      // Get data for this state and calculate year-over-year changes
+    // Define a color palette for better visibility
+    const colors = [
+      '#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd',
+      '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf',
+      '#aec7e8', '#ffbb78', '#98df8a', '#ff9896', '#c5b0d5'
+    ];
+
+    const traces = selectedStates.map((state, index) => {
+      // Get data for this state
       const stateData = inflationData
         .filter(d => d.State === state)
-        .sort((a, b) => parseInt(a.Year) - parseInt(b.Year));
-
-      const yearlyChanges = stateData.map((d, i) => {
-        if (i === 0) return null;
-        const currentRate = parseFloat(d['Inflation Rate (%)']);
-        const prevRate = parseFloat(stateData[i - 1]['Inflation Rate (%)']);
-        return {
+        .map(d => ({
           year: d.Year,
-          change: currentRate - prevRate,
-          rate: currentRate
-        };
-      }).filter(d => d !== null);
+          rate: parseFloat(d['Inflation Rate (%)'])
+        }))
+        .sort((a, b) => parseInt(a.year) - parseInt(b.year));
+
+      // Calculate year-over-year changes
+      const yearlyChanges = [];
+      for (let i = 1; i < stateData.length; i++) {
+        const currentYear = stateData[i];
+        const prevYear = stateData[i - 1];
+        yearlyChanges.push({
+          year: currentYear.year,
+          change: currentYear.rate - prevYear.rate,
+          rate: currentYear.rate
+        });
+      }
 
       return {
         x: yearlyChanges.map(d => d.year),
@@ -91,8 +103,8 @@ const Dashboard = () => {
         type: 'scatter',
         mode: 'lines+markers',
         hoverinfo: 'text',
-        line: { width: 2 },
-        marker: { size: 8 }
+        line: { width: 2, color: colors[index % colors.length] },
+        marker: { size: 8, color: colors[index % colors.length] }
       };
     });
 
@@ -106,15 +118,25 @@ const Dashboard = () => {
           },
           xaxis: { 
             title: 'Year',
-            dtick: 1 // Show every year on x-axis
+            dtick: 1, // Show every year on x-axis
+            range: ['2014', '2024']
           },
           yaxis: { 
             title: 'Change in Inflation Rate (%)',
-            zeroline: true
+            zeroline: true,
+            autorange: true
           },
           hovermode: 'closest',
           showlegend: true,
-          margin: { t: 50, r: 50, b: 50, l: 70 }
+          margin: { t: 50, r: 150, b: 50, l: 70 },
+          legend: {
+            x: 1.1,
+            xanchor: 'left',
+            y: 1,
+            bgcolor: 'rgba(255, 255, 255, 0.9)',
+            bordercolor: 'rgba(0,0,0,0.1)',
+            borderwidth: 1
+          }
         }}
         useResizeHandler
         style={{ width: '100%', height: '400px' }}
@@ -283,9 +305,8 @@ const Dashboard = () => {
                 Inflation Rate Changes Over Time
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                This chart shows how inflation rates have changed year-over-year for each selected state. 
-                Positive values indicate increasing inflation, while negative values show decreasing inflation. 
-                Hover over the lines to see exact changes and rates.
+                Track year-over-year inflation changes by state. Positive values show rising inflation, negative values show declining inflation. 
+                Hover over points to see exact rates.
               </Typography>
               {renderInflationChart()}
             </Box>
@@ -296,8 +317,8 @@ const Dashboard = () => {
                 Relationship Between Housing Prices and Inflation
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                Each point represents a state's housing price index and inflation rate for a specific year. 
-                This visualization helps identify patterns between inflation rates and housing prices across different states and years.
+                Explore how housing prices respond to inflation. Each point shows a state's data for a specific year. 
+                Look for patterns in how prices change with inflation rates.
               </Typography>
               {renderScatterPlot()}
             </Box>
@@ -308,9 +329,8 @@ const Dashboard = () => {
                 Housing Price Index Heat Map
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                This heat map displays housing price index values across all states and years. 
-                Darker colors indicate higher HPI values. The visualization makes it easy to spot regional patterns 
-                and track changes in housing prices over time.
+                Compare housing prices across states and time. Darker colors show higher prices. 
+                Use this view to spot regional patterns and price trends.
               </Typography>
               {renderHPIHeatmap()}
             </Box>

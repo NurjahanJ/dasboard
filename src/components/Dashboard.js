@@ -5,7 +5,7 @@ import StateSelector from './StateSelector';
 import InflationChart from './InflationChart';
 import ScatterPlot from './ScatterPlot';
 import HPIHeatmap from './HPIHeatmap';
-import InteractiveUSMap from './InteractiveUSMap'; // Import the map component
+import AverageHPIBarChart from './AverageHPIBarChart';
 
 const Dashboard = () => {
   const [hpiData, setHpiData] = useState([]);
@@ -124,29 +124,30 @@ const Dashboard = () => {
               </Box>
             </Grid>
           </Grid>
-          {/* Heat Map */}
-          <Grid item xs={12}>
-            <Box sx={{ mb: 3 }}>
-              <Typography variant="h6" gutterBottom>
-                Housing Price Index Heat Map
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                The heat map presents a color-coded matrix of housing price indices across states and years. The x-axis lists the states, and the y-axis represents the years. Darker colors indicate higher housing prices. Hover over a cell to view the exact HPI value.
-              </Typography>
-              <HPIHeatmap hpiData={hpiData} states={states} />
-            </Box>
-          </Grid>
-          {/* Interactive US Map Section (placed above the conclusion) */}
-          <Grid item xs={12}>
-            <Box sx={{ mb: 3 }}>
-              <Typography variant="h6" gutterBottom>
-                Interactive US Map
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                The map below displays the United States with highlighted states. Hover over each state to view its name.
-              </Typography>
-              <InteractiveUSMap />
-            </Box>
+          {/* Heat Map and Average HPI Bar Chart Side by Side */}
+          <Grid container item xs={12} spacing={3}>
+            <Grid item xs={12} md={6}>
+              <Box sx={{ mb: 3 }}>
+                <Typography variant="h6" gutterBottom>
+                  Housing Price Index Heat Map
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                  The heat map presents a color-coded matrix of housing price indices across states and years. The x-axis lists the states, and the y-axis represents the years. Darker colors indicate higher housing prices. Hover over a cell to view the exact HPI value.
+                </Typography>
+                <HPIHeatmap hpiData={hpiData} states={states} />
+              </Box>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <Box sx={{ mb: 3 }}>
+                <Typography variant="h6" gutterBottom>
+                  Average Housing Price Index by State
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                  This bar chart ranks the states by their average Housing Price Index (HPI) over the selected period, providing a clear comparison at a glance.
+                </Typography>
+                <AverageHPIBarChart hpiData={hpiData} states={states} />
+              </Box>
+            </Grid>
           </Grid>
           {/* Conclusion Section */}
           <Grid item xs={12}>

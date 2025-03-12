@@ -64,40 +64,22 @@ const Dashboard = () => {
 
 
   const renderInflationChart = () => {
-    // Define a color palette for better visibility
-    const colors = [
-      '#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd',
-      '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf',
-      '#aec7e8', '#ffbb78', '#98df8a', '#ff9896', '#c5b0d5'
-    ];
-
+    const colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd'];
+  
     const traces = selectedStates.map((state, index) => {
-      // Get data for this state
       const stateData = inflationData
         .filter(d => d.State === state)
         .map(d => ({
           year: d.Year,
-          rate: parseFloat(d['Inflation Rate (%)'])
+          rate: parseFloat(d['Inflation Rate (%)']) // Use actual inflation rate
         }))
         .sort((a, b) => parseInt(a.year) - parseInt(b.year));
-
-      // Calculate year-over-year changes
-      const yearlyChanges = [];
-      for (let i = 1; i < stateData.length; i++) {
-        const currentYear = stateData[i];
-        const prevYear = stateData[i - 1];
-        yearlyChanges.push({
-          year: currentYear.year,
-          change: currentYear.rate - prevYear.rate,
-          rate: currentYear.rate
-        });
-      }
-
+  
       return {
-        x: yearlyChanges.map(d => d.year),
-        y: yearlyChanges.map(d => d.change),
-        text: yearlyChanges.map(d => 
-          `${state}<br>Year: ${d.year}<br>Change: ${d.change.toFixed(2)}%<br>Rate: ${d.rate.toFixed(2)}%`
+        x: stateData.map(d => d.year),
+        y: stateData.map(d => d.rate),
+        text: stateData.map(d => 
+          `${state}<br>Year: ${d.year}<br>Inflation Rate: ${d.rate.toFixed(2)}%`
         ),
         name: state,
         type: 'scatter',
@@ -107,42 +89,24 @@ const Dashboard = () => {
         marker: { size: 8, color: colors[index % colors.length] }
       };
     });
-
+  
     return (
       <Plot
         data={traces}
         layout={{
-          title: {
-            text: 'Yearly Changes in Inflation Rate by State (2014-2024)',
-            font: { size: 18, color: '#333' }
-          },
-          xaxis: { 
-            title: 'Year',
-            dtick: 1, // Show every year on x-axis
-            range: ['2014', '2024']
-          },
-          yaxis: { 
-            title: 'Inflation Rate (%)',
-            zeroline: true,
-            autorange: true
-          },
+          title: { text: 'Inflation Rate by State (2014-2024)', font: { size: 18, color: '#333' } },
+          xaxis: { title: 'Year', dtick: 1, range: ['2014', '2024'] },
+          yaxis: { title: 'Inflation Rate (%)', zeroline: true, autorange: true },
           hovermode: 'closest',
           showlegend: true,
-          margin: { t: 50, r: 150, b: 50, l: 70 },
-          legend: {
-            x: 1.1,
-            xanchor: 'left',
-            y: 1,
-            bgcolor: 'rgba(255, 255, 255, 0.9)',
-            bordercolor: 'rgba(0,0,0,0.1)',
-            borderwidth: 1
-          }
+          margin: { t: 50, r: 150, b: 50, l: 70 }
         }}
         useResizeHandler
         style={{ width: '100%', height: '400px' }}
       />
     );
   };
+  
 
   const renderScatterPlot = () => {
     const traces = selectedStates.map(state => {

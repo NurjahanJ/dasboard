@@ -5,6 +5,7 @@ import StateSelector from './StateSelector';
 import InflationChart from './InflationChart';
 import ScatterPlot from './ScatterPlot';
 import HPIHeatmap from './HPIHeatmap';
+import InteractiveUSMap from './InteractiveUSMap'; // Import the map component
 
 const Dashboard = () => {
   const [hpiData, setHpiData] = useState([]);
@@ -84,6 +85,7 @@ const Dashboard = () => {
           Housing Price Index & Inflation Dashboard
         </Typography>
         <Grid container spacing={3}>
+          {/* State Selection */}
           <Grid item xs={12}>
             <StateSelector 
               states={states}
@@ -93,41 +95,57 @@ const Dashboard = () => {
               onClearSelection={handleClearSelection}
             />
           </Grid>
-          <Grid item xs={12}>
-            <Box sx={{ mb: 3 }}>
-              <Typography variant="h6" gutterBottom>
-                Inflation Rate Changes Over Time
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                This line chart displays the trend in inflation rates over time for the selected states. Each line represents a state, and individual data points indicate the inflation rate for a specific year. Hovering over a point reveals detailed information about that year’s inflation rate, allowing for an in-depth look at year-over-year changes.
-              </Typography>
-              <InflationChart inflationData={inflationData} selectedStates={selectedStates} />
-            </Box>
+          {/* Line Chart and Scatter Plot Side by Side */}
+          <Grid container item xs={12} spacing={3}>
+            <Grid item xs={12} md={6}>
+              <Box sx={{ mb: 3 }}>
+                <Typography variant="h6" gutterBottom>
+                  Inflation Rate Changes Over Time
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                  This line chart displays the trend in inflation rates over time for the selected states. Each line represents a state, and individual data points indicate the inflation rate for a specific year. Hover over a point to reveal detailed information about that year’s inflation rate.
+                </Typography>
+                <InflationChart inflationData={inflationData} selectedStates={selectedStates} />
+              </Box>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <Box sx={{ mb: 3 }}>
+                <Typography variant="h6" gutterBottom>
+                  Relationship Between Housing Prices and Inflation
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                  The scatter plot visualizes the relationship between housing prices (HPI) and inflation rates for the selected states. Each marker represents a data point from a specific year in a state. Hovering over a marker displays the housing price index and the corresponding inflation rate.
+                </Typography>
+                <ScatterPlot 
+                  hpiData={hpiData} 
+                  inflationData={inflationData} 
+                  selectedStates={selectedStates} 
+                />
+              </Box>
+            </Grid>
           </Grid>
-          <Grid item xs={12}>
-            <Box sx={{ mb: 3 }}>
-              <Typography variant="h6" gutterBottom>
-                Relationship Between Housing Prices and Inflation
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                The scatter plot visualizes the relationship between housing prices (HPI) and inflation rates for the selected states. Each marker corresponds to a data point from a specific year in a state. Hovering over a marker displays the housing price index and the corresponding inflation rate, providing insight into how these two factors correlate over time.
-              </Typography>
-              <ScatterPlot 
-                hpiData={hpiData} 
-                inflationData={inflationData} 
-                selectedStates={selectedStates} 
-              />
-            </Box>
-          </Grid>
+          {/* Heat Map */}
           <Grid item xs={12}>
             <Box sx={{ mb: 3 }}>
               <Typography variant="h6" gutterBottom>
                 Housing Price Index Heat Map
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                The heat map presents a color-coded matrix of housing price indices across states and years. The x-axis lists the states, while the y-axis represents the years. Darker colors denote higher housing prices. Hovering over a cell reveals the precise HPI value for that state and year, enabling quick identification of trends and regional variations in housing prices.
+                The heat map presents a color-coded matrix of housing price indices across states and years. The x-axis lists the states, and the y-axis represents the years. Darker colors indicate higher housing prices. Hover over a cell to view the exact HPI value.
               </Typography>
               <HPIHeatmap hpiData={hpiData} states={states} />
+            </Box>
+          </Grid>
+          {/* Interactive US Map Section (placed above the conclusion) */}
+          <Grid item xs={12}>
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="h6" gutterBottom>
+                Interactive US Map
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                The map below displays the United States with highlighted states. Hover over each state to view its name.
+              </Typography>
+              <InteractiveUSMap />
             </Box>
           </Grid>
           {/* Conclusion Section */}

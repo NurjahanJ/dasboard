@@ -1,18 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Container, Grid, Typography, Select, MenuItem, Slider, CircularProgress, Alert } from '@mui/material';
+import { Box, Container, Grid, Typography, Select, MenuItem, Button, CircularProgress, Alert } from '@mui/material';
 import Papa from 'papaparse';
 import Plot from 'react-plotly.js';
-import USMap from './USMap';
 
 const Dashboard = () => {
   const [hpiData, setHpiData] = useState([]);
   const [inflationData, setInflationData] = useState([]);
-  const [populationData, setPopulationData] = useState([]);
   const [selectedStates, setSelectedStates] = useState(['California']);
-  const [yearRange, setYearRange] = useState([2014, 2024]);
   const [states, setStates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  const handleSelectAll = () => {
+    setSelectedStates([...states]);
+  };
+
+  const handleClearSelection = () => {
+    setSelectedStates([]);
+  };
 
   useEffect(() => {
     const loadData = async () => {
@@ -34,15 +39,13 @@ const Dashboard = () => {
           });
         };
 
-        const [hpi, inflation, population] = await Promise.all([
+        const [hpi, inflation] = await Promise.all([
           loadCSV('/state_hpi.csv'),
-          loadCSV('/state_inflation_rates.csv'),
-          loadCSV('/State_poplution.csv')
+          loadCSV('/state_inflation_rates.csv')
         ]);
 
         setHpiData(hpi);
         setInflationData(inflation);
-        setPopulationData(population);
         setStates([...new Set(hpi.map(d => d.State))]);
         setLoading(false);
       } catch (err) {
@@ -54,37 +57,9 @@ const Dashboard = () => {
     loadData();
   }, []);
 
-  const calculateYearlyChange = (data, metric) => {
-    const yearlyChange = {};
-    states.forEach(state => {
-      const stateData = data.filter(d => d.State === state);
-      stateData.sort((a, b) => parseInt(a.Year) - parseInt(b.Year));
-      yearlyChange[state] = stateData.map((d, i) => {
-        if (i === 0) return 0;
-        const currentValue = parseFloat(d[metric]);
-        const previousValue = parseFloat(stateData[i - 1][metric]);
-        return ((currentValue - previousValue) / previousValue) * 100;
-      });
-    });
-    return yearlyChange;
-  };
 
-  const calculateCorrelation = (state) => {
-    const stateHPI = hpiData.filter(d => d.State === state).map(d => parseFloat(d.HPI));
-    const stateInflation = inflationData.filter(d => d.State === state).map(d => parseFloat(d['Inflation Rate (%)']));
-    
-    const n = stateHPI.length;
-    const sumX = stateInflation.reduce((a, b) => a + b, 0);
-    const sumY = stateHPI.reduce((a, b) => a + b, 0);
-    const sumXY = stateInflation.reduce((sum, x, i) => sum + x * stateHPI[i], 0);
-    const sumX2 = stateInflation.reduce((sum, x) => sum + x * x, 0);
-    const sumY2 = stateHPI.reduce((sum, y) => sum + y * y, 0);
 
-    const correlation = (n * sumXY - sumX * sumY) / 
-      Math.sqrt((n * sumX2 - sumX * sumX) * (n * sumY2 - sumY * sumY));
-    
-    return correlation;
-  };
+
 
   const renderHPITrendChart = () => {
     const traces = selectedStates.map(state => ({
@@ -143,29 +118,16 @@ const Dashboard = () => {
   };
 
   const renderScatterPlot = () => {
-    const filteredData = selectedStates.flatMap(state => {
-      const stateHPI = hpiData.filter(d => d.State === state && 
-        parseInt(d.Year) >= yearRange[0] && parseInt(d.Year) <= yearRange[1]);
-      const stateInflation = inflationData.filter(d => d.State === state &&
-        parseInt(d.Year) >= yearRange[0] && parseInt(d.Year) <= yearRange[1]);
-      
-      return stateHPI.map((d, i) => ({
-        x: parseFloat(stateInflation[i]['Inflation Rate (%)']),
-        y: parseFloat(d.HPI),
-        state: state,
-        year: d.Year
-      }));
-    });
-
     const traces = selectedStates.map(state => ({
-      x: filteredData.filter(d => d.state === state).map(d => d.x),
-      y: filteredData.filter(d => d.state === state).map(d => d.y),
-      text: filteredData.filter(d => d.state === state).map(d => d.year),
+      x: inflationData.filter(d => d.State === state).map(d => parseFloat(d['Inflation Rate (%)'])),
+      y: hpiData.filter(d => d.State === state).map(d => parseFloat(d.HPI)),
+      text: hpiData.filter(d => d.State === state).map(d => d.Year),
       name: state,
       type: 'scatter',
-      mode: 'markers',
-      marker: { size: 10 }
+      mode: 'markers'
     }));
+
+
 
     return (
       <Plot
@@ -187,28 +149,46 @@ const Dashboard = () => {
     );
   };
 
-  const renderCorrelationHeatmap = () => {
-    const correlations = states.map(state => calculateCorrelation(state));
+  const renderHPIHeatmap = () => {
+    // Get unique years and sort them
+    const years = [...new Set(hpiData.map(d => d.Year))].sort();
     
+    // Create a matrix of HPI values [years x states]
+    const hpiMatrix = years.map(year => {
+      return states.map(state => {
+        const dataPoint = hpiData.find(d => d.State === state && d.Year === year);
+        return dataPoint ? parseFloat(dataPoint.HPI) : null;
+      });
+    });
+
     return (
       <Plot
         data={[{
-          z: [correlations],
+          z: hpiMatrix,
           x: states,
+          y: years,
           type: 'heatmap',
           colorscale: 'RdBu',
-          zmin: -1,
-          zmax: 1
+          colorbar: {
+            title: 'HPI Value',
+            titleside: 'right'
+          }
         }]}
         layout={{
           title: {
-            text: 'State-by-State Correlation: Inflation vs Housing Prices',
+            text: 'Housing Price Index (HPI) by State and Year',
             font: { size: 18, color: '#333' }
           },
-          xaxis: { title: 'State' },
-          yaxis: { title: 'Correlation', showticklabels: false },
-          height: 200,
-          margin: { t: 50 }
+          xaxis: { 
+            title: 'State',
+            tickangle: 45
+          },
+          yaxis: { 
+            title: 'Year',
+            autorange: 'reversed' // Show earliest years at the top
+          },
+          height: 500,
+          margin: { t: 50, b: 100 } // Increased bottom margin for rotated state labels
         }}
         useResizeHandler
         style={{ width: '100%' }}
@@ -216,58 +196,7 @@ const Dashboard = () => {
     );
   };
 
-  const renderYearlyChangeChart = () => {
-    const hpiChanges = calculateYearlyChange(hpiData, 'HPI');
-    const inflationChanges = calculateYearlyChange(inflationData, 'Inflation Rate (%)');
-    
-    const traces = selectedStates.flatMap(state => [
-      {
-        x: hpiData
-          .filter(d => d.State === state && 
-            parseInt(d.Year) >= yearRange[0] && parseInt(d.Year) <= yearRange[1])
-          .map(d => d.Year)
-          .slice(1),
-        y: hpiChanges[state]
-          .filter((_, i) => {
-            const year = parseInt(hpiData.find(d => d.State === state).Year) + i;
-            return year >= yearRange[0] && year <= yearRange[1];
-          })
-          .slice(1),
-        name: `${state} HPI Change`,
-        type: 'bar'
-      },
-      {
-        x: inflationData
-          .filter(d => d.State === state &&
-            parseInt(d.Year) >= yearRange[0] && parseInt(d.Year) <= yearRange[1])
-          .map(d => d.Year)
-          .slice(1),
-        y: inflationChanges[state]
-          .filter((_, i) => {
-            const year = parseInt(inflationData.find(d => d.State === state).Year) + i;
-            return year >= yearRange[0] && year <= yearRange[1];
-          })
-          .slice(1),
-        name: `${state} Inflation Change`,
-        type: 'bar'
-      }
-    ]);
 
-    return (
-      <Plot
-        data={traces}
-        layout={{
-          title: 'Yearly % Change in HPI vs Inflation',
-          xaxis: { title: 'Year' },
-          yaxis: { title: '% Change' },
-          barmode: 'group',
-          showlegend: true
-        }}
-        useResizeHandler
-        style={{ width: '100%', height: '400px' }}
-      />
-    );
-  };
 
   if (loading) {
     return (
@@ -288,40 +217,32 @@ const Dashboard = () => {
   return (
     <Container maxWidth="xl">
       <Box sx={{ my: 4 }}>
-        <Typography variant="h4" component="h1" gutterBottom>
+        <Typography variant="h4" component="h1" gutterBottom align="center">
           Housing Price Index & Inflation Dashboard
         </Typography>
         
         <Grid container spacing={3}>
-          <Grid item xs={12} md={6}>
-            <Select
-              multiple
-              value={selectedStates}
-              onChange={(e) => setSelectedStates(e.target.value)}
-              sx={{ width: '100%', mb: 2 }}
-            >
-              {states.map((state) => (
-                <MenuItem key={state} value={state}>
-                  {state}
-                </MenuItem>
-              ))}
-            </Select>
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <Typography gutterBottom>Year Range</Typography>
-            <Slider
-              value={yearRange}
-              onChange={(e, newValue) => setYearRange(newValue)}
-              min={2014}
-              max={2024}
-              valueLabelDisplay="auto"
-              sx={{ width: '100%' }}
-            />
-          </Grid>
-          
           <Grid item xs={12}>
-            <Box className="chart-container">
-              <USMap data={hpiData} populationData={populationData} />
+            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 3 }}>
+              <Select
+                multiple
+                value={selectedStates}
+                onChange={(e) => setSelectedStates(e.target.value)}
+                sx={{ minWidth: 200, flex: 1 }}
+                displayEmpty
+              >
+                {states.map((state) => (
+                  <MenuItem key={state} value={state}>
+                    {state}
+                  </MenuItem>
+                ))}
+              </Select>
+              <Button variant="contained" onClick={handleSelectAll}>
+                Select All States
+              </Button>
+              <Button variant="outlined" onClick={handleClearSelection}>
+                Clear Selection
+              </Button>
             </Box>
           </Grid>
           
@@ -335,10 +256,7 @@ const Dashboard = () => {
             {renderScatterPlot()}
           </Grid>
           <Grid item xs={12}>
-            {renderCorrelationHeatmap()}
-          </Grid>
-          <Grid item xs={12}>
-            {renderYearlyChangeChart()}
+            {renderHPIHeatmap()}
           </Grid>
         </Grid>
       </Box>

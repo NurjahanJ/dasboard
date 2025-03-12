@@ -122,7 +122,7 @@ const Dashboard = () => {
             range: ['2014', '2024']
           },
           yaxis: { 
-            title: 'Change in Inflation Rate (%)',
+            title: 'Inflation Rate (%)',
             zeroline: true,
             autorange: true
           },

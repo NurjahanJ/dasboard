@@ -278,13 +278,42 @@ const Dashboard = () => {
           </Grid>
           
           <Grid item xs={12}>
-            {renderInflationChart()}
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="h6" gutterBottom>
+                Inflation Rate Changes Over Time
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                This chart shows how inflation rates have changed year-over-year for each selected state. 
+                Positive values indicate increasing inflation, while negative values show decreasing inflation. 
+                Hover over the lines to see exact changes and rates.
+              </Typography>
+              {renderInflationChart()}
+            </Box>
           </Grid>
           <Grid item xs={12}>
-            {renderScatterPlot()}
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="h6" gutterBottom>
+                Relationship Between Housing Prices and Inflation
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                Each point represents a state's housing price index and inflation rate for a specific year. 
+                This visualization helps identify patterns between inflation rates and housing prices across different states and years.
+              </Typography>
+              {renderScatterPlot()}
+            </Box>
           </Grid>
           <Grid item xs={12}>
-            {renderHPIHeatmap()}
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="h6" gutterBottom>
+                Housing Price Index Heat Map
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                This heat map displays housing price index values across all states and years. 
+                Darker colors indicate higher HPI values. The visualization makes it easy to spot regional patterns 
+                and track changes in housing prices over time.
+              </Typography>
+              {renderHPIHeatmap()}
+            </Box>
           </Grid>
         </Grid>
       </Box>

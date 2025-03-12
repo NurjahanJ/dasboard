@@ -4,6 +4,40 @@ import Papa from 'papaparse';
 import Plot from 'react-plotly.js';
 
 const Dashboard = () => {
+  const renderPieChart = () => {
+    const stateInflationData = selectedStates.map(state => {
+      const totalInflation = inflationData
+        .filter(d => d.State === state)
+        .reduce((acc, curr) => acc + parseFloat(curr['Inflation Rate (%)']), 0);
+      return {
+        state,
+        totalInflation
+      };
+    });
+
+    const data = [{
+      values: stateInflationData.map(d => d.totalInflation),
+      labels: stateInflationData.map(d => d.state),
+      type: 'pie',
+      textinfo: 'label+percent',
+      insidetextorientation: 'radial'
+    }];
+
+    return (
+      <Plot
+        data={data}
+        layout={{
+          title: {
+            text: 'State Distribution of Total Inflation Rates',
+            font: { size: 18, color: '#333' }
+          },
+          showlegend: true
+        }}
+        useResizeHandler
+        style={{ width: '100%', height: '400px', margin: '0 auto' }}
+      />
+    );
+  };
   const [hpiData, setHpiData] = useState([]);
   const [inflationData, setInflationData] = useState([]);
   const [selectedStates, setSelectedStates] = useState(['California']);

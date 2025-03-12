@@ -61,55 +61,82 @@ const Dashboard = () => {
 
 
 
-  const renderHPITrendChart = () => {
-    const traces = selectedStates.map(state => ({
-      x: hpiData.filter(d => d.State === state).map(d => d.Year),
-      y: hpiData.filter(d => d.State === state).map(d => d.HPI),
-      name: state,
-      type: 'scatter',
-      mode: 'lines+markers'
-    }));
 
-    return (
-      <Plot
-        data={traces}
-        layout={{
-          title: {
-            text: 'Housing Price Index (HPI) Trends by State (2014-2024)',
-            font: { size: 18, color: '#333' }
-          },
-          xaxis: { title: 'Year' },
-          yaxis: { title: 'House Price Index (HPI)' },
-          hovermode: 'closest',
-          margin: { t: 50 }
-        }}
-        useResizeHandler
-        style={{ width: '100%', height: '400px' }}
-      />
-    );
-  };
 
   const renderInflationChart = () => {
-    const traces = selectedStates.map(state => ({
-      x: inflationData.filter(d => d.State === state).map(d => d.Year),
-      y: inflationData.filter(d => d.State === state).map(d => d['Inflation Rate (%)']),
-      name: state,
-      type: 'scatter',
-      mode: 'lines+markers'
-    }));
+    // Define a color palette for better visibility
+    const colors = [
+      '#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd',
+      '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf',
+      '#aec7e8', '#ffbb78', '#98df8a', '#ff9896', '#c5b0d5'
+    ];
+
+    const traces = selectedStates.map((state, index) => {
+      // Get data for this state
+      const stateData = inflationData
+        .filter(d => d.State === state)
+        .map(d => ({
+          year: d.Year,
+          rate: parseFloat(d['Inflation Rate (%)'])
+        }))
+        .sort((a, b) => parseInt(a.year) - parseInt(b.year));
+
+      // Calculate year-over-year changes
+      const yearlyChanges = [];
+      for (let i = 1; i < stateData.length; i++) {
+        const currentYear = stateData[i];
+        const prevYear = stateData[i - 1];
+        yearlyChanges.push({
+          year: currentYear.year,
+          change: currentYear.rate - prevYear.rate,
+          rate: currentYear.rate
+        });
+      }
+
+      return {
+        x: yearlyChanges.map(d => d.year),
+        y: yearlyChanges.map(d => d.change),
+        text: yearlyChanges.map(d => 
+          `${state}<br>Year: ${d.year}<br>Change: ${d.change.toFixed(2)}%<br>Rate: ${d.rate.toFixed(2)}%`
+        ),
+        name: state,
+        type: 'scatter',
+        mode: 'lines+markers',
+        hoverinfo: 'text',
+        line: { width: 2, color: colors[index % colors.length] },
+        marker: { size: 8, color: colors[index % colors.length] }
+      };
+    });
 
     return (
       <Plot
         data={traces}
         layout={{
           title: {
-            text: 'State-wise Inflation Rate Trends (2014-2024)',
+            text: 'Yearly Changes in Inflation Rate by State (2014-2024)',
             font: { size: 18, color: '#333' }
           },
-          xaxis: { title: 'Year' },
-          yaxis: { title: 'Inflation Rate (%)' },
+          xaxis: { 
+            title: 'Year',
+            dtick: 1, // Show every year on x-axis
+            range: ['2014', '2024']
+          },
+          yaxis: { 
+            title: 'Change in Inflation Rate (%)',
+            zeroline: true,
+            autorange: true
+          },
           hovermode: 'closest',
-          margin: { t: 50 }
+          showlegend: true,
+          margin: { t: 50, r: 150, b: 50, l: 70 },
+          legend: {
+            x: 1.1,
+            xanchor: 'left',
+            y: 1,
+            bgcolor: 'rgba(255, 255, 255, 0.9)',
+            bordercolor: 'rgba(0,0,0,0.1)',
+            borderwidth: 1
+          }
         }}
         useResizeHandler
         style={{ width: '100%', height: '400px' }}
@@ -118,27 +145,53 @@ const Dashboard = () => {
   };
 
   const renderScatterPlot = () => {
-    const traces = selectedStates.map(state => ({
-      x: inflationData.filter(d => d.State === state).map(d => parseFloat(d['Inflation Rate (%)'])),
-      y: hpiData.filter(d => d.State === state).map(d => parseFloat(d.HPI)),
-      text: hpiData.filter(d => d.State === state).map(d => d.Year),
-      name: state,
-      type: 'scatter',
-      mode: 'markers'
-    }));
+    const traces = selectedStates.map(state => {
+      // Combine HPI and inflation data for each state and year
+      const stateData = hpiData
+        .filter(d => d.State === state)
+        .map(hpiPoint => {
+          const inflationPoint = inflationData.find(
+            d => d.State === state && d.Year === hpiPoint.Year
+          );
+          return {
+            year: hpiPoint.Year,
+            hpi: parseFloat(hpiPoint.HPI),
+            inflation: inflationPoint ? parseFloat(inflationPoint['Inflation Rate (%)']) : null
+          };
+        })
+        .filter(point => point.inflation !== null); // Remove points with missing data
 
-
+      return {
+        x: stateData.map(d => d.inflation),
+        y: stateData.map(d => d.hpi),
+        text: stateData.map(d => `${state}<br>Year: ${d.year}<br>HPI: ${d.hpi.toFixed(1)}<br>Inflation: ${d.inflation.toFixed(1)}%`),
+        name: state,
+        type: 'scatter',
+        mode: 'markers',
+        hoverinfo: 'text',
+        marker: {
+          size: 10,
+          opacity: 0.7
+        }
+      };
+    });
 
     return (
       <Plot
         data={traces}
         layout={{
           title: {
-            text: 'Impact of Inflation on Housing Prices by State',
+            text: 'Housing Prices vs Inflation Rate by State (2014-2024)',
             font: { size: 18, color: '#333' }
           },
-          xaxis: { title: 'Inflation Rate (%)' },
-          yaxis: { title: 'House Price Index (HPI)' },
+          xaxis: { 
+            title: 'Inflation Rate (%)',
+            zeroline: true
+          },
+          yaxis: { 
+            title: 'Housing Price Index (HPI)',
+            zeroline: true
+          },
           hovermode: 'closest',
           showlegend: true,
           margin: { t: 50 }
@@ -246,17 +299,41 @@ const Dashboard = () => {
             </Box>
           </Grid>
           
-          <Grid item xs={12} md={6}>
-            {renderHPITrendChart()}
-          </Grid>
-          <Grid item xs={12} md={6}>
-            {renderInflationChart()}
+          <Grid item xs={12}>
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="h6" gutterBottom>
+                Inflation Rate Changes Over Time
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                Track year-over-year inflation changes by state. Positive values show rising inflation, negative values show declining inflation. 
+                Hover over points to see exact rates.
+              </Typography>
+              {renderInflationChart()}
+            </Box>
           </Grid>
           <Grid item xs={12}>
-            {renderScatterPlot()}
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="h6" gutterBottom>
+                Relationship Between Housing Prices and Inflation
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                Explore how housing prices respond to inflation. Each point shows a state's data for a specific year. 
+                Look for patterns in how prices change with inflation rates.
+              </Typography>
+              {renderScatterPlot()}
+            </Box>
           </Grid>
           <Grid item xs={12}>
-            {renderHPIHeatmap()}
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="h6" gutterBottom>
+                Housing Price Index Heat Map
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                Compare housing prices across states and time. Darker colors show higher prices. 
+                Use this view to spot regional patterns and price trends.
+              </Typography>
+              {renderHPIHeatmap()}
+            </Box>
           </Grid>
         </Grid>
       </Box>

@@ -99,13 +99,16 @@ const Dashboard = () => {
       <Plot
         data={traces}
         layout={{
-          title: 'HPI Trends Over Time',
-          xaxis: { title: 'Year', range: yearRange },
+          title: {
+            text: 'Housing Price Index (HPI) Trends by State (2014-2024)',
+            font: { size: 18, color: '#333' }
+          },
+          xaxis: { title: 'Year' },
           yaxis: { title: 'House Price Index (HPI)' },
-          hovermode: 'closest'
+          hovermode: 'closest',
+          margin: { t: 50 }
         }}
         useResizeHandler
-        className="chart-container"
         style={{ width: '100%', height: '400px' }}
       />
     );
@@ -124,13 +127,16 @@ const Dashboard = () => {
       <Plot
         data={traces}
         layout={{
-          title: 'Inflation Rate Trends',
-          xaxis: { title: 'Year', range: yearRange },
+          title: {
+            text: 'State-wise Inflation Rate Trends (2014-2024)',
+            font: { size: 18, color: '#333' }
+          },
+          xaxis: { title: 'Year' },
           yaxis: { title: 'Inflation Rate (%)' },
-          hovermode: 'closest'
+          hovermode: 'closest',
+          margin: { t: 50 }
         }}
         useResizeHandler
-        className="chart-container"
         style={{ width: '100%', height: '400px' }}
       />
     );
@@ -165,14 +171,17 @@ const Dashboard = () => {
       <Plot
         data={traces}
         layout={{
-          title: 'Inflation vs HPI Correlation',
+          title: {
+            text: 'Impact of Inflation on Housing Prices by State',
+            font: { size: 18, color: '#333' }
+          },
           xaxis: { title: 'Inflation Rate (%)' },
           yaxis: { title: 'House Price Index (HPI)' },
           hovermode: 'closest',
-          showlegend: true
+          showlegend: true,
+          margin: { t: 50 }
         }}
         useResizeHandler
-        className="chart-container"
         style={{ width: '100%', height: '400px' }}
       />
     );
@@ -192,14 +201,17 @@ const Dashboard = () => {
           zmax: 1
         }]}
         layout={{
-          title: 'Correlation Between Inflation and HPI by State',
+          title: {
+            text: 'State-by-State Correlation: Inflation vs Housing Prices',
+            font: { size: 18, color: '#333' }
+          },
           xaxis: { title: 'State' },
           yaxis: { title: 'Correlation', showticklabels: false },
-          height: 200
+          height: 200,
+          margin: { t: 50 }
         }}
         useResizeHandler
-        className="chart-container"
-        style={{ width: '100%', height: '250px' }}
+        style={{ width: '100%' }}
       />
     );
   };
@@ -252,7 +264,6 @@ const Dashboard = () => {
           showlegend: true
         }}
         useResizeHandler
-        className="chart-container"
         style={{ width: '100%', height: '400px' }}
       />
     );

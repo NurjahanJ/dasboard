@@ -61,55 +61,60 @@ const Dashboard = () => {
 
 
 
-  const renderHPITrendChart = () => {
-    const traces = selectedStates.map(state => ({
-      x: hpiData.filter(d => d.State === state).map(d => d.Year),
-      y: hpiData.filter(d => d.State === state).map(d => d.HPI),
-      name: state,
-      type: 'scatter',
-      mode: 'lines+markers'
-    }));
 
-    return (
-      <Plot
-        data={traces}
-        layout={{
-          title: {
-            text: 'Housing Price Index (HPI) Trends by State (2014-2024)',
-            font: { size: 18, color: '#333' }
-          },
-          xaxis: { title: 'Year' },
-          yaxis: { title: 'House Price Index (HPI)' },
-          hovermode: 'closest',
-          margin: { t: 50 }
-        }}
-        useResizeHandler
-        style={{ width: '100%', height: '400px' }}
-      />
-    );
-  };
 
   const renderInflationChart = () => {
-    const traces = selectedStates.map(state => ({
-      x: inflationData.filter(d => d.State === state).map(d => d.Year),
-      y: inflationData.filter(d => d.State === state).map(d => d['Inflation Rate (%)']),
-      name: state,
-      type: 'scatter',
-      mode: 'lines+markers'
-    }));
+    const traces = selectedStates.map(state => {
+      // Get data for this state and calculate year-over-year changes
+      const stateData = inflationData
+        .filter(d => d.State === state)
+        .sort((a, b) => parseInt(a.Year) - parseInt(b.Year));
+
+      const yearlyChanges = stateData.map((d, i) => {
+        if (i === 0) return null;
+        const currentRate = parseFloat(d['Inflation Rate (%)']);
+        const prevRate = parseFloat(stateData[i - 1]['Inflation Rate (%)']);
+        return {
+          year: d.Year,
+          change: currentRate - prevRate,
+          rate: currentRate
+        };
+      }).filter(d => d !== null);
+
+      return {
+        x: yearlyChanges.map(d => d.year),
+        y: yearlyChanges.map(d => d.change),
+        text: yearlyChanges.map(d => 
+          `${state}<br>Year: ${d.year}<br>Change: ${d.change.toFixed(2)}%<br>Rate: ${d.rate.toFixed(2)}%`
+        ),
+        name: state,
+        type: 'scatter',
+        mode: 'lines+markers',
+        hoverinfo: 'text',
+        line: { width: 2 },
+        marker: { size: 8 }
+      };
+    });
 
     return (
       <Plot
         data={traces}
         layout={{
           title: {
-            text: 'State-wise Inflation Rate Trends (2014-2024)',
+            text: 'Yearly Changes in Inflation Rate by State (2014-2024)',
             font: { size: 18, color: '#333' }
           },
-          xaxis: { title: 'Year' },
-          yaxis: { title: 'Inflation Rate (%)' },
+          xaxis: { 
+            title: 'Year',
+            dtick: 1 // Show every year on x-axis
+          },
+          yaxis: { 
+            title: 'Change in Inflation Rate (%)',
+            zeroline: true
+          },
           hovermode: 'closest',
-          margin: { t: 50 }
+          showlegend: true,
+          margin: { t: 50, r: 50, b: 50, l: 70 }
         }}
         useResizeHandler
         style={{ width: '100%', height: '400px' }}
@@ -272,10 +277,7 @@ const Dashboard = () => {
             </Box>
           </Grid>
           
-          <Grid item xs={12} md={6}>
-            {renderHPITrendChart()}
-          </Grid>
-          <Grid item xs={12} md={6}>
+          <Grid item xs={12}>
             {renderInflationChart()}
           </Grid>
           <Grid item xs={12}>

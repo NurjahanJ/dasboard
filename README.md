@@ -18,3 +18,32 @@
 * Average Housing Price Index by State (Bar Chart):
   * Ranks states based on their average HPI over the selected period.
   * Bars display average HPI values via hover tooltips, enabling easy comparison across states
+
+
+## Data Sources
+
+To analyze the relationship between inflation and housing prices, I am using the following datasets:
+
+1. Federal Housing Finance Agency (FHFA) House Price Index (HPI):
+
+* [Dataset Link](https://www.fhfa.gov/data/hpi/datasets?utm_source=chatgpt.com)
+
+  * Measures changes in housing prices across the U.S., helping us track how home values have evolved over time.
+
+2. U.S. Bureau of Labor Statistics (BLS) Consumer Price Index (CPI-U)
+
+* [West Region CPI Data](https://www.bls.gov/regions/west/factsheet/consumer-price-index-data-tables.htm?utm_source=chatgpt.com)
+
+3. Freddie Mac House Price Index (FMHPI)
+
+* [Dataset Link](https://www.freddiemac.com/research/indices/house-price-index?utm_source=chatgpt.com)
+
+  * Another measure of home price changes that complements the FHFA HPI data.
+  * 
+## How These Datasets Answer the Question
+
+* CPI Data shows how inflation has fluctuated in different states, giving us insight into cost-of-living increases.
+
+* HPI and FMHPI Data track housing price changes, revealing how much home values have increased over time.
+  
+* By comparing inflation rates with housing price growth, we can determine whether housing prices have outpaced inflation and assess affordability trends.

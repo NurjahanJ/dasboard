@@ -7,6 +7,9 @@ import ScatterPlot from './ScatterPlot';
 import HPIHeatmap from './HPIHeatmap';
 import AverageHPIBarChart from './AverageHPIBarChart';
 
+/**
+ * Dashboard component that displays housing price index and inflation data.
+ */
 const Dashboard = () => {
   const [hpiData, setHpiData] = useState([]);
   const [inflationData, setInflationData] = useState([]);
@@ -15,10 +18,16 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  /**
+   * Handles selecting all states.
+   */
   const handleSelectAll = () => {
     setSelectedStates([...states]);
   };
 
+  /**
+   * Handles clearing the state selection.
+   */
   const handleClearSelection = () => {
     setSelectedStates([]);
   };
@@ -79,7 +88,7 @@ const Dashboard = () => {
   }
 
   return (
-    <Container maxWidth="xl">
+    <Container maxWidth="xl" sx={{ padding: 4 }}>
       <Box sx={{ my: 4 }}>
         <Typography variant="h4" component="h1" gutterBottom align="center">
           Housing Price Index & Inflation Dashboard

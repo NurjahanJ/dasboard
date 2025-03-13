@@ -20,8 +20,10 @@ const AverageHPIBarChart = ({ hpiData, states }) => {
           x: averageData.map(d => d.state),
           y: averageData.map(d => d.avgHPI),
           type: 'bar',
-          text: averageData.map(d => `${d.avgHPI.toFixed(2)}`),
-          hoverinfo: 'text',
+          // Provide text for hover only
+          text: averageData.map(d => d.avgHPI.toFixed(2)),
+          textposition: 'none',        // Hide the text on the bars
+          hoverinfo: 'text',           // Still display text on hover
           marker: { color: 'rgba(55,128,191,0.7)' },
         }
       ]}
@@ -32,7 +34,7 @@ const AverageHPIBarChart = ({ hpiData, states }) => {
         margin: { t: 50, b: 100, l: 50, r: 50 },
       }}
       useResizeHandler
-      style={{ width: '100%', height: '500px' }}  // Updated height to match heat map
+      style={{ width: '100%', height: '500px' }}
     />
   );
 };

@@ -1,43 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Container, Grid, Typography, Select, MenuItem, Button, CircularProgress, Alert } from '@mui/material';
+import { Box, Container, Grid, Typography, CircularProgress, Alert } from '@mui/material';
 import Papa from 'papaparse';
-import Plot from 'react-plotly.js';
+import StateSelector from './StateSelector';
+import InflationChart from './InflationChart';
+import ScatterPlot from './ScatterPlot';
+import HPIHeatmap from './HPIHeatmap';
+import AverageHPIBarChart from './AverageHPIBarChart';
 
 const Dashboard = () => {
-  const renderPieChart = () => {
-    const stateInflationData = selectedStates.map(state => {
-      const totalInflation = inflationData
-        .filter(d => d.State === state)
-        .reduce((acc, curr) => acc + parseFloat(curr['Inflation Rate (%)']), 0);
-      return {
-        state,
-        totalInflation
-      };
-    });
-
-    const data = [{
-      values: stateInflationData.map(d => d.totalInflation),
-      labels: stateInflationData.map(d => d.state),
-      type: 'pie',
-      textinfo: 'label+percent',
-      insidetextorientation: 'radial'
-    }];
-
-    return (
-      <Plot
-        data={data}
-        layout={{
-          title: {
-            text: 'State Distribution of Total Inflation Rates',
-            font: { size: 18, color: '#333' }
-          },
-          showlegend: true
-        }}
-        useResizeHandler
-        style={{ width: '100%', height: '400px', margin: '0 auto' }}
-      />
-    );
-  };
   const [hpiData, setHpiData] = useState([]);
   const [inflationData, setInflationData] = useState([]);
   const [selectedStates, setSelectedStates] = useState(['California']);
@@ -68,7 +38,8 @@ const Dashboard = () => {
           return new Promise((resolve) => {
             Papa.parse(csv, {
               header: true,
-              complete: (results) => resolve(results.data.filter(row => Object.values(row).some(val => val)))
+              complete: (results) =>
+                resolve(results.data.filter((row) => Object.values(row).some((val) => val)))
             });
           });
         };
@@ -80,7 +51,7 @@ const Dashboard = () => {
 
         setHpiData(hpi);
         setInflationData(inflation);
-        setStates([...new Set(hpi.map(d => d.State))]);
+        setStates([...new Set(hpi.map((d) => d.State))]);
         setLoading(false);
       } catch (err) {
         setError(err.message);
@@ -90,164 +61,6 @@ const Dashboard = () => {
 
     loadData();
   }, []);
-
-
-
-
-
-
-
-  const renderInflationChart = () => {
-    const colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd'];
-  
-    const traces = selectedStates.map((state, index) => {
-      const stateData = inflationData
-        .filter(d => d.State === state)
-        .map(d => ({
-          year: d.Year,
-          rate: parseFloat(d['Inflation Rate (%)']) // Use actual inflation rate
-        }))
-        .sort((a, b) => parseInt(a.year) - parseInt(b.year));
-  
-      return {
-        x: stateData.map(d => d.year),
-        y: stateData.map(d => d.rate),
-        text: stateData.map(d => 
-          `${state}<br>Year: ${d.year}<br>Inflation Rate: ${d.rate.toFixed(2)}%`
-        ),
-        name: state,
-        type: 'scatter',
-        mode: 'lines+markers',
-        hoverinfo: 'text',
-        line: { width: 2, color: colors[index % colors.length] },
-        marker: { size: 8, color: colors[index % colors.length] }
-      };
-    });
-  
-    return (
-      <Plot
-        data={traces}
-        layout={{
-          title: { text: 'Inflation Rate by State (2014-2024)', font: { size: 18, color: '#333' } },
-          xaxis: { title: 'Year', dtick: 1, range: ['2014', '2024'] },
-          yaxis: { title: 'Inflation Rate (%)', zeroline: true, autorange: true },
-          hovermode: 'closest',
-          showlegend: true,
-          margin: { t: 50, r: 150, b: 50, l: 70 }
-        }}
-        useResizeHandler
-        style={{ width: '100%', height: '400px' }}
-      />
-    );
-  };
-  
-
-  const renderScatterPlot = () => {
-    const traces = selectedStates.map(state => {
-      // Combine HPI and inflation data for each state and year
-      const stateData = hpiData
-        .filter(d => d.State === state)
-        .map(hpiPoint => {
-          const inflationPoint = inflationData.find(
-            d => d.State === state && d.Year === hpiPoint.Year
-          );
-          return {
-            year: hpiPoint.Year,
-            hpi: parseFloat(hpiPoint.HPI),
-            inflation: inflationPoint ? parseFloat(inflationPoint['Inflation Rate (%)']) : null
-          };
-        })
-        .filter(point => point.inflation !== null); // Remove points with missing data
-
-      return {
-        x: stateData.map(d => d.inflation),
-        y: stateData.map(d => d.hpi),
-        text: stateData.map(d => `${state}<br>Year: ${d.year}<br>HPI: ${d.hpi.toFixed(1)}<br>Inflation: ${d.inflation.toFixed(1)}%`),
-        name: state,
-        type: 'scatter',
-        mode: 'markers',
-        hoverinfo: 'text',
-        marker: {
-          size: 10,
-          opacity: 0.7
-        }
-      };
-    });
-
-    return (
-      <Plot
-        data={traces}
-        layout={{
-          title: {
-            text: 'Housing Prices vs Inflation Rate by State (2014-2024)',
-            font: { size: 18, color: '#333' }
-          },
-          xaxis: { 
-            title: 'Inflation Rate (%)',
-            zeroline: true
-          },
-          yaxis: { 
-            title: 'Housing Price Index (HPI)',
-            zeroline: true
-          },
-          hovermode: 'closest',
-          showlegend: true,
-          margin: { t: 50 }
-        }}
-        useResizeHandler
-        style={{ width: '100%', height: '400px' }}
-      />
-    );
-  };
-
-  const renderHPIHeatmap = () => {
-    // Get unique years and sort them
-    const years = [...new Set(hpiData.map(d => d.Year))].sort();
-    
-    // Create a matrix of HPI values [years x states]
-    const hpiMatrix = years.map(year => {
-      return states.map(state => {
-        const dataPoint = hpiData.find(d => d.State === state && d.Year === year);
-        return dataPoint ? parseFloat(dataPoint.HPI) : null;
-      });
-    });
-
-    return (
-      <Plot
-        data={[{
-          z: hpiMatrix,
-          x: states,
-          y: years,
-          type: 'heatmap',
-          colorscale: 'RdBu',
-          colorbar: {
-            title: 'HPI Value',
-            titleside: 'right'
-          }
-        }]}
-        layout={{
-          title: {
-            text: 'Housing Price Index (HPI) by State and Year',
-            font: { size: 18, color: '#333' }
-          },
-          xaxis: { 
-            title: 'State',
-            tickangle: 45
-          },
-          yaxis: { 
-            title: 'Year',
-            autorange: 'reversed' // Show earliest years at the top
-          },
-          height: 500,
-          margin: { t: 50, b: 100 } // Increased bottom margin for rotated state labels
-        }}
-        useResizeHandler
-        style={{ width: '100%' }}
-      />
-    );
-  };
-
-
 
   if (loading) {
     return (
@@ -271,66 +84,80 @@ const Dashboard = () => {
         <Typography variant="h4" component="h1" gutterBottom align="center">
           Housing Price Index & Inflation Dashboard
         </Typography>
-        
         <Grid container spacing={3}>
+          {/* State Selection */}
           <Grid item xs={12}>
-            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 3 }}>
-              <Select
-                multiple
-                value={selectedStates}
-                onChange={(e) => setSelectedStates(e.target.value)}
-                sx={{ minWidth: 200, flex: 1 }}
-                displayEmpty
-              >
-                {states.map((state) => (
-                  <MenuItem key={state} value={state}>
-                    {state}
-                  </MenuItem>
-                ))}
-              </Select>
-              <Button variant="contained" onClick={handleSelectAll}>
-                Select All States
-              </Button>
-              <Button variant="outlined" onClick={handleClearSelection}>
-                Clear Selection
-              </Button>
-            </Box>
+            <StateSelector 
+              states={states}
+              selectedStates={selectedStates}
+              onChange={(e) => setSelectedStates(e.target.value)}
+              onSelectAll={handleSelectAll}
+              onClearSelection={handleClearSelection}
+            />
           </Grid>
-          
+          {/* Line Chart and Scatter Plot Side by Side */}
+          <Grid container item xs={12} spacing={3}>
+            <Grid item xs={12} md={6}>
+              <Box sx={{ mb: 3 }}>
+                <Typography variant="h6" gutterBottom>
+                  Inflation Rate Changes Over Time
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                  This line chart displays the trend in inflation rates over time for the selected states. Each line represents a state, and individual data points indicate the inflation rate for a specific year. Hover over a point to reveal detailed information about that year’s inflation rate.
+                </Typography>
+                <InflationChart inflationData={inflationData} selectedStates={selectedStates} />
+              </Box>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <Box sx={{ mb: 3 }}>
+                <Typography variant="h6" gutterBottom>
+                  Relationship Between Housing Prices and Inflation
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                  The scatter plot visualizes the relationship between housing prices (HPI) and inflation rates for the selected states. Each marker represents a data point from a specific year in a state. Hovering over a marker displays the housing price index and the corresponding inflation rate.
+                </Typography>
+                <ScatterPlot 
+                  hpiData={hpiData} 
+                  inflationData={inflationData} 
+                  selectedStates={selectedStates} 
+                />
+              </Box>
+            </Grid>
+          </Grid>
+          {/* Heat Map and Average HPI Bar Chart Side by Side */}
+          <Grid container item xs={12} spacing={3}>
+            <Grid item xs={12} md={6}>
+              <Box sx={{ mb: 3 }}>
+                <Typography variant="h6" gutterBottom>
+                  Housing Price Index Heat Map
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                  The heat map presents a color-coded matrix of housing price indices across states and years. The x-axis lists the states, and the y-axis represents the years. Darker colors indicate higher housing prices. Hover over a cell to view the exact HPI value.
+                </Typography>
+                <HPIHeatmap hpiData={hpiData} states={states} />
+              </Box>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <Box sx={{ mb: 3 }}>
+                <Typography variant="h6" gutterBottom>
+                  Average Housing Price Index by State
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                  This bar chart ranks the states by their average Housing Price Index (HPI) over the selected period, providing a clear comparison at a glance.
+                </Typography>
+                <AverageHPIBarChart hpiData={hpiData} states={states} />
+              </Box>
+            </Grid>
+          </Grid>
+          {/* Conclusion Section */}
           <Grid item xs={12}>
             <Box sx={{ mb: 3 }}>
               <Typography variant="h6" gutterBottom>
-                Inflation Rate Changes Over Time
+                Conclusion
               </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                Track year-over-year inflation changes by state. Positive values show rising inflation, negative values show declining inflation. 
-                Hover over points to see exact rates.
+              <Typography variant="body2" color="text.secondary">
+                Analysis indicates that inflation has impacted housing prices in different U.S. states over the past decade, though not uniformly across all regions. A simple theory proposed that states experiencing higher inflation rates would also see proportionately larger increases in housing prices, as rising costs for construction materials, labor, and increased demand in dynamic markets drive up prices. In states with strong local economies, such as California and Texas, a clear upward trend in both inflation rates and housing prices supports this theory. However, in regions with less robust local economies or where housing supply is ample, the direct impact of inflation on housing prices was less pronounced. These findings suggest that inflation is one of several key drivers influencing housing markets, with regional economic growth, market demand, and housing supply constraints also playing significant roles. Further studies incorporating additional economic variables are needed to fully understand the complex interplay between inflation and housing prices.
               </Typography>
-              {renderInflationChart()}
-            </Box>
-          </Grid>
-          <Grid item xs={12}>
-            <Box sx={{ mb: 3 }}>
-              <Typography variant="h6" gutterBottom>
-                Relationship Between Housing Prices and Inflation
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                Explore how housing prices respond to inflation. Each point shows a state's data for a specific year. 
-                Look for patterns in how prices change with inflation rates.
-              </Typography>
-              {renderScatterPlot()}
-            </Box>
-          </Grid>
-          <Grid item xs={12}>
-            <Box sx={{ mb: 3 }}>
-              <Typography variant="h6" gutterBottom>
-                Housing Price Index Heat Map
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                Compare housing prices across states and time. Darker colors show higher prices. 
-                Use this view to spot regional patterns and price trends.
-              </Typography>
-              {renderHPIHeatmap()}
             </Box>
           </Grid>
         </Grid>

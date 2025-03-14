@@ -5,7 +5,7 @@ import StateSelector from './StateSelector';
 import InflationChart from './InflationChart';
 import ScatterPlot from './ScatterPlot';
 import HPIHeatmap from './HPIHeatmap';
-import AverageHPIBarChart from './AverageHPIBarChart';
+import HPIIncreaseBarChart from './HPIIncreaseBarChart';
 
 /**
  * Dashboard component that displays housing price index and inflation data.
@@ -13,6 +13,7 @@ import AverageHPIBarChart from './AverageHPIBarChart';
 const Dashboard = () => {
   const [hpiData, setHpiData] = useState([]);
   const [inflationData, setInflationData] = useState([]);
+  const [populationData, setPopulationData] = useState([]); // New state for population data
   const [selectedStates, setSelectedStates] = useState(['California']);
   const [states, setStates] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -53,13 +54,16 @@ const Dashboard = () => {
           });
         };
 
-        const [hpi, inflation] = await Promise.all([
+        // Load all CSV files concurrently.
+        const [hpi, inflation, population] = await Promise.all([
           loadCSV('/state_hpi.csv'),
-          loadCSV('/state_inflation_rates.csv')
+          loadCSV('/state_inflation_rates.csv'),
+          loadCSV('/State_poplution.csv')
         ]);
 
         setHpiData(hpi);
         setInflationData(inflation);
+        setPopulationData(population);
         setStates([...new Set(hpi.map((d) => d.State))]);
         setLoading(false);
       } catch (err) {
@@ -133,7 +137,7 @@ const Dashboard = () => {
               </Box>
             </Grid>
           </Grid>
-          {/* Heat Map and Average HPI Bar Chart Side by Side */}
+          {/* Heat Map and HPI Increase Bar Chart Side by Side */}
           <Grid container item xs={12} spacing={3}>
             <Grid item xs={12} md={6}>
               <Box sx={{ mb: 3 }}>
@@ -149,12 +153,17 @@ const Dashboard = () => {
             <Grid item xs={12} md={6}>
               <Box sx={{ mb: 3 }}>
                 <Typography variant="h6" gutterBottom>
-                  Average Housing Price Index by State
+                  House Price Increase by State (2014-2024)
                 </Typography>
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                  This bar chart ranks the states by their average Housing Price Index (HPI) over the selected period, providing a clear comparison at a glance.
+                  This bar chart ranks the states by their increase in Housing Price Index (HPI) from 2014 to 2024.
+                  Hover over a bar to view the HPI increase along with the state’s population.
                 </Typography>
-                <AverageHPIBarChart hpiData={hpiData} states={states} />
+                <HPIIncreaseBarChart 
+                  hpiData={hpiData} 
+                  states={states} 
+                  populationData={populationData} 
+                />
               </Box>
             </Grid>
           </Grid>

@@ -40,7 +40,7 @@ To analyze the relationship between inflation and housing prices, I am using the
 * [Dataset Link](https://www.freddiemac.com/research/indices/house-price-index?utm_source=chatgpt.com)
 
   * Another measure of home price changes that complements the FHFA HPI data.
-  * 
+  
 ## How These Datasets Answer the Question
 
 * CPI Data shows how inflation has fluctuated in different states, giving us insight into cost-of-living increases.

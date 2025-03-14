@@ -95,7 +95,7 @@ const Dashboard = () => {
     <Container maxWidth="xl" sx={{ padding: 4 }}>
       <Box sx={{ my: 4 }}>
         <Typography variant="h4" component="h1" gutterBottom align="center">
-          Housing Price Index & Inflation Dashboard
+          Housing Price & Inflation Dashboard
         </Typography>
         <Grid container spacing={3}>
           {/* State Selection */}
